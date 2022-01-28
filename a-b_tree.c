@@ -244,7 +244,7 @@ void AB_tree_Insert_algo(AB_Tree *self,  void *key, void *value)
             return;
 
         int level = self->SearchPathLength-1;
-        AB_internel_node *child_ptr ;
+
         while(level > 0)
         {
             rank = self->SearchBranch[level-1];
@@ -253,22 +253,25 @@ void AB_tree_Insert_algo(AB_Tree *self,  void *key, void *value)
                    Ptr_ith_Key(self, self->SearchPath[level],self->SearchPath[level]->KeyConut-1),
                    self->key_size);
 
+            AB_internel_node *chd = *(AB_internel_node **)Ptr_ith_Child(self, self->SearchPath[level-1], rank);
+            memcpy(Ptr_ith_Child(self, self->SearchPath[level-1], rank),
+                   (void*)&node,
+                   sizeof(AB_internel_node*));
 
-            memcpy((void*)&child_ptr, (void*)&node, sizeof(AB_internel_node*));
+            node = AddData(self, self->SearchPath[level-1], KV(key, (void*)&node), rank);
 
-            node = (void*)&child_ptr;
 
-            /*memcpy(Ptr_ith_Child(self, self->SearchPath[level-1], rank),
-                   (void*)&child_ptr,
-                   sizeof(AB_internel_node*));*/
+            memcpy(Ptr_ith_Child(self, self->SearchPath[level-1], rank),
+                   (void*)&chd,
+                   sizeof(AB_internel_node*));
 
-            node = AddData(self, self->SearchPath[level-1], KV(key, node), rank);
             self->SearchPath[level]->KeyConut -= 1;
 
             if (node == NULL)
                 break;
             level -= 1;
         }
+        //root node splits
         if (level == 0 && node)
         {
 
@@ -329,9 +332,6 @@ void tra(AB_Tree *self)
         self->SearchBranch[self->SearchPathLength-1] += 1;
         self->SearchPathLength++;
     }
-
-
-
 }
 
 
@@ -339,58 +339,8 @@ void tra(AB_Tree *self)
 int main()
 {
 
-   /*
-    AB_Tree ab_tree = {.a=3, .b=7, .key_size = sizeof(int), .value_size = sizeof(int), .SearchPathLength = 0, .KeyComp = Comp};
-    ab_tree.root = (AB_internel_node*)malloc(sizeof(AB_internel_node)+ab_tree.b*ab_tree.key_size);
-    ab_tree.root->IsBottom = 1;
-    ab_tree.root->children = malloc((ab_tree.b+1)*ab_tree.value_size);
 
-    ab_tree.root->KeyConut = 6;
-    *(int*)Ptr_ith_Key(&ab_tree, ab_tree.root, 0) = 100;
-    *(int*)Ptr_ith_Key(&ab_tree, ab_tree.root, 1) = 200;
-    *(int*)Ptr_ith_Key(&ab_tree, ab_tree.root, 2) = 300;
-    *(int*)Ptr_ith_Key(&ab_tree, ab_tree.root, 3) = 400;
-    *(int*)Ptr_ith_Key(&ab_tree, ab_tree.root, 4) = 500;
-    *(int*)Ptr_ith_Key(&ab_tree, ab_tree.root, 5) = 600;
-
-    *(int*)Ptr_ith_Child(&ab_tree, ab_tree.root, 0) = 10;
-    *(int*)Ptr_ith_Child(&ab_tree, ab_tree.root, 1) = 20;
-    *(int*)Ptr_ith_Child(&ab_tree, ab_tree.root, 2) = 30;
-    *(int*)Ptr_ith_Child(&ab_tree, ab_tree.root, 3) = 40;
-    *(int*)Ptr_ith_Child(&ab_tree, ab_tree.root, 4) = 50;
-    *(int*)Ptr_ith_Child(&ab_tree, ab_tree.root, 5) = 60;
-    *(int*)Ptr_ith_Child(&ab_tree, ab_tree.root, 6) = 0x7FFFFFFF;
-
-    int key = 350, value = 100;
-    AB_internel_node *new_node = AddData(&ab_tree, ab_tree.root, KV(&key, &value), 3);
-    int i ;
-    for(i = 0 ; i < ab_tree.root->KeyConut ; i++)
-    {
-        printf("%d ",*(int*)Ptr_ith_Key(&ab_tree, ab_tree.root, i));
-    }
-    printf("\n");
-    for(i = 0 ; i < ab_tree.root->KeyConut+1 ; i++)
-    {
-        printf("%d ",*(int*)Ptr_ith_Child(&ab_tree, ab_tree.root, i));
-    }
-    printf("\n");
-    printf("new_node\n");
-    for(i = 0 ; i < new_node->KeyConut ; i++)
-    {
-        printf("%d ",*(int*)Ptr_ith_Key(&ab_tree, new_node, i));
-    }
-    printf("\n");
-    for(i = 0 ; i < new_node->KeyConut+1 ; i++)
-    {
-        printf("%d ",*(int*)Ptr_ith_Child(&ab_tree, new_node, i));
-    }
-    printf("\n");
-
-    */
-
-    AB_Tree ab_tree = {.a=3, .b=6, .key_size = sizeof(int), .value_size = sizeof(int), .SearchPathLength = 0, .KeyComp = Comp};
-    //ab_tree.root = (AB_internel_node*)malloc(sizeof(AB_internel_node)+(ab_tree.b-1)*ab_tree.key_size);
-    //ab_tree.root->children = malloc((ab_tree.b+2)*ab_tree.value_size);
+    AB_Tree ab_tree = {.a=3, .b=8, .key_size = sizeof(int), .value_size = sizeof(int), .SearchPathLength = 0, .KeyComp = Comp};
 
     ab_tree.root = MakeNode(&ab_tree, ab_tree.value_size);
     ab_tree.root->IsBottom = 1;
@@ -416,15 +366,29 @@ int main()
     printf("bottom : %d\n",ab_tree.root->IsBottom);
     key = 65, value = 650;
     AB_tree_Insert_algo(&ab_tree, &key, &value);
-    /*key = 75, value = 750;
+    key = 15, value = 150;
+    AB_tree_Insert_algo(&ab_tree, &key, &value);
+    key = 21, value = 210;
+    AB_tree_Insert_algo(&ab_tree, &key, &value);
+    key = 68, value = 680;
+    AB_tree_Insert_algo(&ab_tree, &key, &value);
+    key = 75, value = 750;
     AB_tree_Insert_algo(&ab_tree, &key, &value);
     key = 85, value = 850;
-    AB_tree_Insert_algo(&ab_tree, &key, &value);*/
-    /*srand(time(NULL));
+    AB_tree_Insert_algo(&ab_tree, &key, &value);
+    key = 5, value = 50;
+    AB_tree_Insert_algo(&ab_tree, &key, &value);
+    key = 6, value = 60;
+    AB_tree_Insert_algo(&ab_tree, &key, &value);
+    key = 7, value = 70;
+    AB_tree_Insert_algo(&ab_tree, &key, &value);
+    key = 42, value = 420;
+    AB_tree_Insert_algo(&ab_tree, &key, &value);
+    srand(time(NULL));
     clock_t start, finish;
     double sum =0.0;
     int a = 300;
-    for(a = 1 ; a <= 10 ; a++)
+    for(a = 1 ; a <= 1000000 ; a++)
     {
         int x = rand()%10000;
         int y = rand()%10000;
@@ -436,7 +400,7 @@ int main()
         if (a%1000000 == 0)
             srand(time(NULL));
     }
-    printf("%lf\n",sum);*/
+    printf("%lf\n",sum);
     //tra(&ab_tree);
 
     //return 0;
