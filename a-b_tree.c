@@ -212,9 +212,7 @@ static inline AB_internel_node *AddData(AB_Tree *self, AB_internel_node *node, K
     }
 }
 
-
-
-void AB_tree_Insert_algo(AB_Tree *self,  void *key, void *value)
+void AB_tree_Search_algo(AB_Tree *self,  void *key)
 {
     AB_internel_node *node = self->root;
     self->SearchPathLength = 0;
@@ -231,7 +229,13 @@ void AB_tree_Insert_algo(AB_Tree *self,  void *key, void *value)
             break;
         node = *(AB_internel_node**)Ptr_ith_Child(self, node, rank);
     }
-    //rank = GetKeyRank(self, node, key);
+}
+
+void AB_tree_Insert_algo(AB_Tree *self,  void *key, void *value)
+{
+    AB_tree_Search_algo(self, key);
+    AB_internel_node *node = self->SearchPath[self->SearchPathLength-1];
+    int rank = GetKeyRank(self, node, key);
 
     if (!self->KeyIsFound)
     {
@@ -240,16 +244,26 @@ void AB_tree_Insert_algo(AB_Tree *self,  void *key, void *value)
             return;
 
         int level = self->SearchPathLength-1;
-
+        AB_internel_node *child_ptr ;
         while(level > 0)
         {
             rank = self->SearchBranch[level-1];
-            key = *(void**)Ptr_ith_Key(self,
-                                        self->SearchPath[level],
-                                        self->SearchPath[level]->KeyConut-1);
+
+            memcpy(key,
+                   Ptr_ith_Key(self, self->SearchPath[level],self->SearchPath[level]->KeyConut-1),
+                   self->key_size);
+
+
+            memcpy((void*)&child_ptr, (void*)&node, sizeof(AB_internel_node*));
+
+            node = (void*)&child_ptr;
+
+            /*memcpy(Ptr_ith_Child(self, self->SearchPath[level-1], rank),
+                   (void*)&child_ptr,
+                   sizeof(AB_internel_node*));*/
 
             node = AddData(self, self->SearchPath[level-1], KV(key, node), rank);
-            self->SearchPath[level-1]->KeyConut -= 1;
+            self->SearchPath[level]->KeyConut -= 1;
 
             if (node == NULL)
                 break;
@@ -260,8 +274,6 @@ void AB_tree_Insert_algo(AB_Tree *self,  void *key, void *value)
 
             AB_internel_node* tmp_root = self->root;
             self->root = MakeNode(self, sizeof(AB_internel_node*));
-            //self->root = (AB_internel_node *)malloc(sizeof(AB_internel_node)+ (self->b-1) * self->key_size);
-            //self->root->children = malloc(sizeof(AB_internel_node*)*(self->b));
 
             self->root->IsBottom = 0 ;
             self->root->KeyConut = 0 ;
@@ -272,11 +284,11 @@ void AB_tree_Insert_algo(AB_Tree *self,  void *key, void *value)
             tmp_root->KeyConut -= 1;
 
             memcpy(Ptr_ith_Child(self, self->root, 0),
-                    (void**)&tmp_root,
+                    (void*)&tmp_root,
                     sizeof(AB_internel_node*));
 
             memcpy(Ptr_ith_Child(self, self->root, 1),
-                    (void**)&node,
+                    (void*)&node,
                     sizeof(AB_internel_node*));
 
             self->root->KeyConut = 1;
@@ -404,10 +416,10 @@ int main()
     printf("bottom : %d\n",ab_tree.root->IsBottom);
     key = 65, value = 650;
     AB_tree_Insert_algo(&ab_tree, &key, &value);
-    //key = 75, value = 750;
-    //AB_tree_Insert_algo(&ab_tree, &key, &value);
-    //key = 85, value = 850;
-    //AB_tree_Insert_algo(&ab_tree, &key, &value);
+    /*key = 75, value = 750;
+    AB_tree_Insert_algo(&ab_tree, &key, &value);
+    key = 85, value = 850;
+    AB_tree_Insert_algo(&ab_tree, &key, &value);*/
     /*srand(time(NULL));
     clock_t start, finish;
     double sum =0.0;
@@ -466,6 +478,21 @@ int main()
         printf("%d ",*(int*)Ptr_ith_Child(&ab_tree, node, i));
     }
     printf("\n");
+
+    node = *(AB_internel_node **)Ptr_ith_Child(&ab_tree, ab_tree.root, 2);
+    printf("3rd\n");
+    for(i = 0 ; i < node->KeyConut ; i++)
+    {
+        printf("%d ", *(int*)Ptr_ith_Key(&ab_tree, node, i));
+    }
+
+    printf("\n");
+    for(i = 0 ; i < node->KeyConut+1 ; i++)
+    {
+        printf("%d ",*(int*)Ptr_ith_Child(&ab_tree, node, i));
+    }
+    printf("\n");
+
 
     printf("hihi 1\n");
     printf("hihi 2\n");
