@@ -4,7 +4,7 @@
 #include<time.h>
 #include"AB_tree_map.h"
 #include"AB_tree_algo.h"
-
+#include"AB_node_acc_mod.h"
 
 typedef struct KV_pair KV_pair;
 typedef struct AB_Tree AB_Tree;
@@ -48,9 +48,8 @@ void AB_tree_Map_init(struct AB_Tree_Map* Tree_Map, short a, short b, size_t key
     TreeConfig->b = b;
     TreeConfig->key_size = key_size;
     TreeConfig->value_size = value_size;
-    TreeConfig->root = MakeNode(TreeConfig, value_size, 1);
+    TreeConfig->root = RequestAB_node(TreeConfig, 1);
     TreeConfig->root->KeyCount = 0;
-    TreeConfig->privae_key = NULL;
     TreeConfig->privae_value = NULL;
     TreeConfig->KeyComp = Comp_int;
     TreeConfig->KeyDestroy = DoNothing;
@@ -117,4 +116,13 @@ static void SetValueDestroy(AB_Tree_Map *Tree_Map, void(*ValueDestroy)(const voi
 static void GetFoundValue(AB_Tree_Map *Tree_Map, void *ValueContainer)
 {
     memcpy(ValueContainer, Tree_Map->TreeConfig->privae_value, Tree_Map->TreeConfig->value_size);
+}
+
+void clea(AB_Tree_Map *Tree_Map)
+{
+    //free(Tree_Map->TreeConfig->root);
+    
+    FreeAB_node(Tree_Map->TreeConfig, Tree_Map->TreeConfig->root);
+    free(Tree_Map->TreeConfig);
+    //free(Tree_Map->TreeConfig);
 }

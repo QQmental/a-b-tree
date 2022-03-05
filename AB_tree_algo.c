@@ -4,43 +4,72 @@
 #include "AB_tree_algo.h"
 #include "algo_helper.h"
 //#define BIN_SEARCH
+#define SHOWDIR
+
 
 /*
-typedef struct AB_internel_node AB_internel_node ;
+typedef struct AB_node AB_node ;
 typedef struct KV_pair KV_pair;
 
-static inline void ShifChildrenRight(AB_Tree *self, AB_internel_node *node, int pos, size_t child_size);
-static inline void ShifKeysRight(AB_Tree *self, AB_internel_node *node, int pos);
+static inline void ShifChildrenRight(AB_Tree *self, AB_node *node, int pos, size_t child_size);
+static inline void ShifKeysRight(AB_Tree *self, AB_node *node, int pos);
 
-static inline void ShiftKeysLeft(AB_Tree *self, AB_internel_node *node, int pos);
-static inline void ShiftChildrenLeft(AB_Tree*, AB_internel_node*, int, size_t);
+static inline void ShiftKeysLeft(AB_Tree *self, AB_node *node, int pos);
+static inline void ShiftChildrenLeft(AB_Tree*, AB_node*, int, size_t);
 
-static inline void *Ptr_ith_Key(AB_Tree *self, AB_internel_node *node, int ith);
-static inline void *Ptr_ith_Child(AB_Tree *self, AB_internel_node *node, int ith);
+static inline void *Ptr_ith_Key(AB_Tree *self, AB_node *node, int ith);
+static inline void *Ptr_ith_Child(AB_Tree *self, AB_node *node, int ith);
 
-static inline int IsFullNode(AB_Tree *self, AB_internel_node *node);
-static inline int GetKeyRank(AB_Tree *self, AB_internel_node *node, void *key);
+static inline int IsFullNode(AB_Tree *self, AB_node *node);
+static inline int GetKeyRank(AB_Tree *self, AB_node *node, void *key);
 
-static AB_internel_node *SplitNode(AB_Tree *self, AB_internel_node *cur, KV_pair kv, int new_key_pos);
-static AB_internel_node *AddData(AB_Tree *self, AB_internel_node *cur, KV_pair kv, int new_key_pos);
+static AB_node *SplitNode(AB_Tree *self, AB_node *cur, KV_pair kv, int new_key_pos);
+static AB_node *AddData(AB_Tree *self, AB_node *cur, KV_pair kv, int new_key_pos);
 */
-
+static void ReplacedWithSuccesor(AB_Tree *self, AB_node *node_dst, int KeyRank_dst);
 
 
 void AB_tree_Insert_algo(AB_Tree *self, KV_pair kv);
 int AB_tree_Search_algo(AB_Tree *self, const void *key);
 int AB_tree_Delete_algo(AB_Tree *self, const void *key);
 
+static int
+try_borrow_right(
+        AB_Tree *self,
+        AB_node *node,
+        AB_node *parent,
+        int branch_parent);
 
+
+static int
+try_borrow_left(
+        AB_Tree *self,
+        AB_node *node,
+        AB_node *parent,
+        int branch_parent);
+
+
+static int try_merge_left_to_node(
+    AB_Tree *self,
+    AB_node *node,
+    AB_node *parent,
+    int branch_parent);
+
+static int try_merge_right_to_node(
+    AB_Tree *self,
+    AB_node *node,
+    AB_node *parent,
+    int branch_parent);
 
 int AB_tree_Search_algo(AB_Tree *self, const void *key)
 {
     self->KeyIsFound = 0;
     self->SearchPathLength = 0;
-    self->privae_key = self->privae_value = NULL;
-    AB_internel_node *node = self->root;
+    self->privae_value = NULL;
+    AB_node *node = self->root;
     int lv_node_key = -1, rank = 0;
 
+    
     while(1)
     {
         if (self->KeyIsFound)
@@ -51,7 +80,6 @@ int AB_tree_Search_algo(AB_Tree *self, const void *key)
         if (self->KeyIsFound && lv_node_key == -1)
         {
             lv_node_key = self->SearchPathLength;
-            self->privae_key = Ptr_ith_Key(self, node, rank);
         }
         self->SearchBranch[self->SearchPathLength] = rank;
         self->SearchPath[self->SearchPathLength] = node;
@@ -59,8 +87,7 @@ int AB_tree_Search_algo(AB_Tree *self, const void *key)
         if (node->IsBottom)
             break;
 
-        node = *(AB_internel_node**)Ptr_ith_Child(self, node, rank);
-
+        node = AccessAB_node_child(self, node, rank);
     }
 
     if (self->KeyIsFound)
@@ -79,16 +106,18 @@ void AB_tree_Insert_algo(AB_Tree *self, KV_pair kv)
 
     int level = self->SearchPathLength-1;
 
-    AB_internel_node *cur = self->SearchPath[level], *new_node;
+    AB_node *cur = self->SearchPath[level], *new_node;
 
     if (self->KeyIsFound)
     {
         self->ValueDestroy(self->privae_value);
+        //AB_child_dtor(self->privae_value);
+
         memcpy(self->privae_value, kv.value, self->value_size);
         return ;
     }
 
-    AB_internel_node *chd;
+    AB_node *chd;
     while(1)
     {
         new_node = AddData(self, cur, kv, self->SearchBranch[level]);
@@ -108,11 +137,13 @@ void AB_tree_Insert_algo(AB_Tree *self, KV_pair kv)
 
     if (level == -1 && new_node)// the root was full and it splits
     {
-        AB_internel_node *tmp_root = self->root;
-        self->root = MakeNode(self, sizeof(AB_internel_node*), 0);
+        AB_node *tmp_root = self->root;
+
+        self->root = RequestAB_node(self, 0);
+
         self->root->KeyCount = 1;
 
-        AB_node_WriteKey(self, self->root, Ptr_ith_Key(self, tmp_root, tmp_root->KeyCount-1), 0);
+        AB_node_MoveKeys(self, Setnode_arg(self->root, 0), Setnode_arg(tmp_root, tmp_root->KeyCount-1), 1);
 
         AB_node_WriteChild(self, self->root, (void*)&tmp_root, 0);
 
@@ -123,7 +154,7 @@ void AB_tree_Insert_algo(AB_Tree *self, KV_pair kv)
 }
 int AB_tree_Delete_algo(AB_Tree *self, const void *key)
 {
-    AB_internel_node *node_key;
+    AB_node *node_key;
     int level, rank_key;
     int depth_key = AB_tree_Search_algo(self, key);
 
@@ -136,8 +167,10 @@ int AB_tree_Delete_algo(AB_Tree *self, const void *key)
 
     if (node_key->IsBottom)
     {
-        self->KeyDestroy(Ptr_ith_Key(self, node_key, rank_key));
-        self->ValueDestroy(Ptr_ith_Child(self, node_key, rank_key));
+        //self->KeyDestroy(Ptr_ith_Key(self, node_key, rank_key));
+        //self->ValueDestroy(Ptr_ith_Child(self, node_key, rank_key));
+        AB_key_dtor(self, node_key, rank_key);
+        AB_child_dtor(self, node_key, rank_key);
         ShiftKeysLeft(self, node_key, rank_key);
         ShiftChildrenLeft(self, node_key, rank_key);
         node_key->KeyCount -= 1;
@@ -146,7 +179,7 @@ int AB_tree_Delete_algo(AB_Tree *self, const void *key)
     {
         ReplacedWithSuccesor(self, node_key, rank_key);
     }
-    
+
     if (self->SearchPathLength == 1)
         return 1;
 
@@ -168,7 +201,8 @@ int AB_tree_Delete_algo(AB_Tree *self, const void *key)
     }
     if (level == 0 && self->root->KeyCount == 0)
     {
-        free(self->root);
+        //free(self->root);
+        FreeAB_node(self, self->root);
         self->root = self->SearchPath[1];
     }
     return 1;
@@ -176,8 +210,189 @@ int AB_tree_Delete_algo(AB_Tree *self, const void *key)
 
 }
 
+static void ReplacedWithSuccesor(AB_Tree *self, AB_node *node_dst, int KeyRank_dst)
+{
+    AB_node *succ = self->SearchPath[self->SearchPathLength-1];
+    //self->KeyDestroy(Ptr_ith_Key(self, node_dst, KeyRank_dst));
+    AB_key_dtor(self, node_dst, KeyRank_dst);
+
+    //destroy value corresponding to the given key
+    //self->ValueDestroy(Ptr_ith_Child(self, succ, succ->KeyCount));
+    AB_child_dtor(self, succ, succ->KeyCount);
 
 
+    AB_node_MoveKeys(self, Setnode_arg(node_dst, KeyRank_dst), Setnode_arg(succ, succ->KeyCount-1), 1);
+
+    succ->KeyCount -= 1;
+
+}
+
+
+
+static int
+try_borrow_right(
+    AB_Tree *self,
+    AB_node *node,
+    AB_node *parent,
+    int branch_parent)
+{
+    AB_node *sib_node = NULL;
+
+    //no right sibling
+    if (branch_parent == parent->KeyCount)
+        return 0;
+
+    sib_node = AccessAB_node_child(self, parent, branch_parent+1);
+
+    if (sib_node->KeyCount == self->a-1)
+        return 0;
+
+    AB_node_MoveKeys(self, Setnode_arg(node, node->KeyCount), Setnode_arg(parent, branch_parent), 1);
+
+    node->KeyCount += 1;
+
+    AB_node_MoveChildren(self, Setnode_arg(node, node->KeyCount), Setnode_arg(sib_node, 0), 1);
+
+    AB_node_MoveKeys(self, Setnode_arg(parent, branch_parent), Setnode_arg(sib_node, 0), 1);
+
+    ShiftKeysLeft(self, sib_node, 0);
+    
+    ShiftChildrenLeft(self, sib_node, 0);
+    
+    sib_node->KeyCount -= 1;
+
+    return 1;
+}
+
+static int
+try_borrow_left(
+    AB_Tree *self,
+    AB_node *node,
+    AB_node *parent,
+    int branch_parent)
+{
+    AB_node *sib_node = NULL;
+
+    //no left sibling
+    if (branch_parent == 0)
+        return 0;
+
+    sib_node = AccessAB_node_child(self, parent, branch_parent-1);
+
+    if (sib_node->KeyCount == self->a-1)
+        return 0;
+
+    ShifKeysRight(self, node, 0);
+    
+    ShifChildrenRight(self, node, 0);
+ 
+    AB_node_MoveKeys(self, Setnode_arg(node, 0), Setnode_arg(parent, branch_parent-1), 1);
+
+   
+    AB_node_MoveChildren(self, Setnode_arg(node, 0), Setnode_arg(sib_node, sib_node->KeyCount), 1);
+    
+    node->KeyCount += 1;
+
+    AB_node_MoveKeys(self, Setnode_arg(parent, branch_parent-1), Setnode_arg(sib_node, sib_node->KeyCount-1), 1);
+
+    sib_node->KeyCount -= 1;
+
+    return 1;
+}
+
+
+
+static int try_merge_right_to_node(
+    AB_Tree *self,
+    AB_node *node,
+    AB_node *parent,
+    int branch_parent)
+{
+
+    AB_node *sib_node = NULL;
+
+    //no right sibling
+    if (branch_parent == parent->KeyCount)
+        return 0;
+ 
+    sib_node = AccessAB_node_child(self, parent, branch_parent+1);
+
+    AB_node_MoveKeys(self, Setnode_arg(node, node->KeyCount), Setnode_arg(parent, branch_parent), 1);
+
+    AB_node_MoveKeys(self, Setnode_arg(node, node->KeyCount+1), Setnode_arg(sib_node, 0), sib_node->KeyCount);
+
+    AB_node_MoveChildren(self, 
+                        Setnode_arg(node, node->KeyCount+1),
+                        Setnode_arg(sib_node, 0), 
+                        sib_node->KeyCount+1);
+
+
+    node->KeyCount += (sib_node->KeyCount+1);
+
+    FreeAB_node(self, sib_node);
+
+    ShiftKeysLeft(self, parent, branch_parent);
+    
+    ShiftChildrenLeft(self, parent, branch_parent+1);
+    
+    parent->KeyCount -= 1;
+
+    
+    return 1;
+}
+
+
+
+
+
+
+
+
+static int try_merge_left_to_node(
+    AB_Tree *self,
+    AB_node *node,
+    AB_node *parent,
+    int branch_parent)
+{
+
+    AB_node *sib_node = NULL;
+
+    //no left sibling
+    if (branch_parent == 0)
+        return 0;
+
+    sib_node = AccessAB_node_child(self, parent, branch_parent-1);
+
+
+    AB_node_MoveKeys(self, Setnode_arg(node, sib_node->KeyCount+1), Setnode_arg(node, 0), node->KeyCount);
+
+    AB_node_MoveChildren(self, 
+                        Setnode_arg(node, sib_node->KeyCount+1), 
+                        Setnode_arg(node, 0), 
+                        node->KeyCount+1);
+
+    AB_node_MoveKeys(self, Setnode_arg(node, sib_node->KeyCount), Setnode_arg(parent, branch_parent-1), 1);
+
+    AB_node_MoveKeys(self, Setnode_arg(node, 0), Setnode_arg(sib_node, 0), sib_node->KeyCount);
+
+    AB_node_MoveChildren(self, 
+                        Setnode_arg(node, 0), 
+                        Setnode_arg(sib_node, 0), 
+                        sib_node->KeyCount+1);
+
+    node->KeyCount += (sib_node->KeyCount+1);
+
+    //free(sib_node);
+    FreeAB_node(self, sib_node);
+
+    ShiftKeysLeft(self, parent, branch_parent-1);
+    
+    ShiftChildrenLeft(self, parent, branch_parent-1);
+    
+    parent->KeyCount -= 1;
+    
+    return 1 ;
+}
 
 
 
@@ -203,7 +418,10 @@ void tra(AB_Tree *self)
                 for(i = 0 ; i < self->SearchPath[level]->KeyCount ; i++)
                     printf("%d\n",*(int*)Ptr_ith_Key(self, self->SearchPath[level], i));
             }
-            //printf("back\n");
+            #ifdef SHOWDIR
+                printf("back\n");
+            #endif
+            
             self->SearchBranch[level] = 0;
             level--;
             continue;
@@ -211,9 +429,13 @@ void tra(AB_Tree *self)
         
         if (self->SearchBranch[level] > 0)
             printf("%d\n",*(int*)Ptr_ith_Key(self, self->SearchPath[level], self->SearchBranch[level]-1));
-        //printf("down\n");
-        self->SearchPath[level+1]
-        = *(AB_internel_node**)Ptr_ith_Child(self, self->SearchPath[level], self->SearchBranch[level]);
+
+        #ifdef SHOWDIR
+           printf("down\n");
+        #endif
+        self->SearchPath[level+1] = AccessAB_node_child(self, self->SearchPath[level], self->SearchBranch[level]);
+        //= *(AB_node**)Ptr_ith_Child(self, self->SearchPath[level], self->SearchBranch[level]);
+
 
         self->SearchBranch[level]++;
         level++;
