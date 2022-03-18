@@ -49,7 +49,6 @@ void AB_tree_Map_init(struct AB_Tree_Map* Tree_Map, short a, short b, size_t key
     TreeConfig->key_size = key_size;
     TreeConfig->value_size = value_size;
     TreeConfig->root = RequestAB_node(TreeConfig, 1);
-    TreeConfig->root->KeyCount = 0;
     TreeConfig->privae_value = NULL;
     TreeConfig->KeyComp = Comp_int;
     TreeConfig->KeyDestroy = DoNothing;

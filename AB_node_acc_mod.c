@@ -1,5 +1,7 @@
 #include"AB_node_acc_mod.h"
+#include"AB_node.h"
 #include"stdio.h"
+
 static void AB_node_datacpy(AB_Tree *self, void *dst, void *src, size_t byte_cnt);
 void AB_node_WriteKey(AB_Tree *self, AB_node *node, const void *key, int ith);
 void AB_node_WriteChild(AB_Tree *self, AB_node *node, const void *child, int ith);
@@ -11,7 +13,19 @@ AB_node *RequestAB_node(AB_Tree *self, int IsBottom);
 AB_node *AccessAB_node_child(AB_Tree *self, AB_node *node, int ith_child);
 
 
+void* Ptr_ith_Key(AB_Tree *self, AB_node *node, int ith)
+{
+    return (void*) ((char*)node + sizeof(AB_node) + self->key_size * ith);
+}
 
+void *Ptr_ith_Child(AB_Tree *self, AB_node *node, int ith)
+{
+    size_t value_offset = sizeof(AB_node)+ (self->b-1) * self->key_size ;
+    if (node->IsBottom == 0)
+        return (void*) ((char*)node + value_offset + sizeof(AB_node*)* ith);
+    else
+        return (void*) ((char*)node + value_offset + self->value_size * ith);
+}
 
 void AB_node_MoveKeys(AB_Tree *self, node_arg dst_node, node_arg src_node, int moved_elem_cnt)
 {

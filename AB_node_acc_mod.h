@@ -11,8 +11,8 @@ struct node_arg
 
 typedef struct node_arg node_arg;
 
-static inline void *Ptr_ith_Key(AB_Tree *self, AB_node *node, int ith);
-static inline void *Ptr_ith_Child(AB_Tree *self, AB_node *node, int ith);
+void *Ptr_ith_Key(AB_Tree *self, AB_node *node, int ith);
+void *Ptr_ith_Child(AB_Tree *self, AB_node *node, int ith);
 static inline node_arg Setnode_arg(AB_node *node, int ith_element);
 
 void AB_node_WriteKey(AB_Tree *self, AB_node *node, const void *key, int ith);
@@ -38,17 +38,5 @@ static inline node_arg Setnode_arg(AB_node *node, int ith_element)
 
 
 
-static inline void* Ptr_ith_Key(AB_Tree *self, AB_node *node, int ith)
-{
-    return (void*) ((char*)node + sizeof(AB_node) + self->key_size * ith);
-}
 
-static inline void *Ptr_ith_Child(AB_Tree *self, AB_node *node, int ith)
-{
-    size_t value_offset = sizeof(AB_node)+ (self->b-1) * self->key_size ;
-    if (node->IsBottom == 0)
-        return (void*) ((char*)node + value_offset + sizeof(AB_node*)* ith);
-    else
-        return (void*) ((char*)node + value_offset + self->value_size * ith);
-}
 #endif

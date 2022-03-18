@@ -9,14 +9,14 @@ struct KV_pair
 {
     const void *key, *value;
 };
-
+/*
 struct AB_node
 {
     short KeyCount;
     char IsBottom ;
 
 };
-
+*/
 struct AB_Tree
 {
     struct AB_node *root;
