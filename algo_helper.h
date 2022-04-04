@@ -69,6 +69,16 @@ static inline int GetKeyRank(AB_Tree *self, AB_node *node, const void *key)
 
 static inline int IsFullNode(AB_Tree *self, AB_node *node)
 {
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     return node->KeyCount == self->b- 1;
 }
 
