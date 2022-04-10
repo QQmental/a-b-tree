@@ -10,7 +10,7 @@ output:main.c AB_tree.o AB_tree_algo.o $(xxx_o) AB_KV_util.o
 #gcc -g main.c AB_tree.o AB_tree_algo.o $(xxx_o) AB_KV_util.o -o main
 
 
-AB_tree.o:AB_tree.c AB_tree_map.h
+AB_tree.o:AB_tree.c AB_tree_map.h AB_tree_algo.h AB_node_acc_mod.h
 	gcc -g -c AB_tree.c
 
 AB_tree_algo.o:AB_tree_algo.c AB_tree_algo.h algo_helper.h 

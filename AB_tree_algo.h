@@ -2,6 +2,9 @@
 #define AB_TREE_ALGO_H_INCLUDED
 #include<stdlib.h>
 #include<string.h>
+#include"AB_tree_map.h"
+#include"node_arg.h"
+
 typedef struct KV_pair KV_pair;
 typedef struct AB_node AB_node;
 typedef struct AB_Tree AB_Tree;
@@ -9,20 +12,14 @@ struct KV_pair
 {
     const void *key, *value;
 };
-/*
-struct AB_node
-{
-    short KeyCount;
-    char IsBottom ;
-
-};
-*/
 struct AB_Tree
 {
     struct AB_node *root;
     struct AB_node *SearchPath[32];
     short SearchBranch[32];
-    void *privae_value;
+    //void *privae_value2;
+    //int cxx;
+    node_arg private_value;
     int (*KeyComp)(const void*, const void*);
     void (*KeyDestroy)(const void*);
     void (*ValueDestroy)(const void*);
@@ -33,7 +30,6 @@ struct AB_Tree
 
 };
 static inline KV_pair KV(const void *k, const void *v);
-//static inline AB_node *MakeNode(AB_Tree *self, size_t child_size, int IsBottom);
 void AB_tree_Insert_algo(AB_Tree *self, KV_pair kv);
 int AB_tree_Search_algo(AB_Tree *self, const void *key);
 int AB_tree_Delete_algo(AB_Tree *self, const void *key);

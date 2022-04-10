@@ -2,14 +2,10 @@
 #define AB_NODE_ACC_MOD_H
 #include"AB_tree_algo.h"
 #include<string.h>
-struct node_arg
-{
-    AB_node *node;
-    int ith_element;
-};
+#include"node_arg.h"
 
 
-typedef struct node_arg node_arg;
+
 
 void *Ptr_ith_Key(AB_Tree *self, AB_node *node, int ith);
 void *Ptr_ith_Child(AB_Tree *self, AB_node *node, int ith);
