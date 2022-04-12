@@ -2,6 +2,9 @@
 #define AB_TREE_ALGO_H_INCLUDED
 #include<stdlib.h>
 #include<string.h>
+#include"AB_tree_map.h"
+#include"node_arg.h"
+
 typedef struct KV_pair KV_pair;
 typedef struct AB_node AB_node;
 typedef struct AB_Tree AB_Tree;
@@ -15,6 +18,7 @@ struct AB_Tree
     struct AB_node *SearchPath[32];
     short SearchBranch[32];
     void *privae_value;
+    //node_arg privete_value;
     int (*KeyComp)(const void*, const void*);
     void (*KeyDestroy)(const void*);
     void (*ValueDestroy)(const void*);
