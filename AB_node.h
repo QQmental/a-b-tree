@@ -6,6 +6,7 @@ struct AB_node
     char IsBottom ;
 
 };
+typedef struct AB_node AB_node;
 
 
 #endif

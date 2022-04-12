@@ -12,8 +12,8 @@ void print_int_int(const void *key, const void *value)
 int main()
 {
     printf("Hello world!!!!\n");
-    AB_Tree_Map ab_tree;
-    AB_tree_Map_init(&ab_tree, 4, 14, sizeof(int), sizeof(int));
+    KV_map *ab_tree;
+    ab_tree = AB_tree_Map_init(5, 12, sizeof(int), sizeof(int));
     srand(time(NULL));
     clock_t start, finish;
     double sum =0.0;
@@ -29,7 +29,7 @@ int main()
 
 
         start = clock();
-        ab_tree.Insert(&ab_tree, &k, &v);
+        ab_tree->Insert(ab_tree, &k, &v);
         finish = clock();
         sum = sum+((finish - start) / (double)CLOCKS_PER_SEC);
         if (i%1000000 == 0)
@@ -49,15 +49,15 @@ int main()
         k = rand()%10000;
         k = 10000*k + rand()%10000;
         start = clock();
-        ab_tree.Delete(&ab_tree, &k);
+        ab_tree->Delete(ab_tree, &k);
         
         //printf("delete %d\n",k);
         
         finish = clock();
-        if (ab_tree.Search(&ab_tree, &k))
+        if (ab_tree->Search(ab_tree, &k))
             printf("??? %d\n",k);
 
-        if (ab_tree.Delete(&ab_tree, &k) == 1)
+        if (ab_tree->Delete(ab_tree, &k) == 1)
             printf("del ??? %d\n",k);
         //printf("delete %d\n",k);
         
@@ -73,7 +73,7 @@ int main()
         //printf("insert <%d,%d>\n",k,v);
     }
     printf("%lf\n",sum);
-    clea(&ab_tree);
+    clea(ab_tree);
     //tra(ab_tree.TreeConfig);
     return 0;
     /*for(i = 0 ; i < 10000000 ; i++)

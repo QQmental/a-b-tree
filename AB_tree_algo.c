@@ -4,7 +4,7 @@
 #include "AB_tree_algo.h"
 #include "algo_helper.h"
 //#define BIN_SEARCH
-#define SHOWDIR
+//#define SHOWDIR
 
 
 /*
@@ -65,7 +65,8 @@ int AB_tree_Search_algo(AB_Tree *self, const void *key)
 {
     self->KeyIsFound = 0;
     self->SearchPathLength = 0;
-    self->privae_value = NULL;
+    //self->privae_value = NULL;
+    self->private_value.node = NULL;
     AB_node *node = self->root;
     int lv_node_key = -1, rank = 0;
 
@@ -92,8 +93,12 @@ int AB_tree_Search_algo(AB_Tree *self, const void *key)
 
     if (self->KeyIsFound)
     {
-        self->privae_value
-        = Ptr_ith_Child(self, node, self->SearchBranch[self->SearchPathLength-1]);
+        //self->privae_value
+        //= Ptr_ith_Child(self, node, self->SearchBranch[self->SearchPathLength-1]);
+
+        self->private_value = Setnode_arg(node, self->SearchBranch[self->SearchPathLength-1]);
+
+
     }
     return lv_node_key;
 }
@@ -101,7 +106,9 @@ int AB_tree_Search_algo(AB_Tree *self, const void *key)
 
 void AB_tree_Insert_algo(AB_Tree *self, KV_pair kv)
 {
-    self->privae_value = NULL;
+    //self->privae_value = NULL;
+    //self->privae_value = NULL;
+    self->private_value.node = NULL;
     AB_tree_Search_algo(self, kv.key);
 
     int level = self->SearchPathLength-1;
@@ -110,9 +117,11 @@ void AB_tree_Insert_algo(AB_Tree *self, KV_pair kv)
 
     if (self->KeyIsFound)
     {
-        self->ValueDestroy(self->privae_value);
+        //self->ValueDestroy(self->privae_value);
+        AB_child_dtor(self, self->private_value.node, self->private_value.ith_element);
+        //memcpy(self->privae_value, kv.value, self->value_size);
+        AB_node_WriteChild(self, self->private_value.node, kv.value, self->private_value.ith_element);
 
-        memcpy(self->privae_value, kv.value, self->value_size);
         return ;
     }
 

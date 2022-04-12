@@ -17,8 +17,9 @@ struct AB_Tree
     struct AB_node *root;
     struct AB_node *SearchPath[32];
     short SearchBranch[32];
-    void *privae_value;
-    //node_arg privete_value;
+    //void *privae_value2;
+    //int cxx;
+    node_arg private_value;
     int (*KeyComp)(const void*, const void*);
     void (*KeyDestroy)(const void*);
     void (*ValueDestroy)(const void*);
