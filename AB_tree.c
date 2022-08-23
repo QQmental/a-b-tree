@@ -52,7 +52,6 @@ KV_map *AB_tree_Map_init(short a, short b, size_t key_size, size_t value_size)
     TreeConfig->key_size = key_size;
     TreeConfig->value_size = value_size;
     TreeConfig->root = RequestAB_node(TreeConfig, 1);
-    //TreeConfig->privae_value = NULL;
     TreeConfig->private_value.node = NULL;
 
     TreeConfig->KeyComp = Comp_int;
@@ -72,12 +71,7 @@ static int Insert(KV_map *Tree_Map, const void *key, const void *value)
 
     if(TreeConfig->private_value.node)
         return 0;
-    /*if(TreeConfig->privae_value)
-    {
-        //TreeConfig->ValueDestroy(TreeConfig->privae_value);
-        //memcpy(TreeConfig->privae_value, value, TreeConfig->value_size);
-        return 0;
-    }*/
+        
     return 1 ;
 }
 static int Search(KV_map *Tree_Map, const void *key)

@@ -14,57 +14,78 @@ int main()
 {
     printf("Hello world!\n");
     KV_map *ab_tree;
-    ab_tree = AB_tree_Map_init(6, 14, sizeof(int), sizeof(int));
+    int tmp[256];
+    ab_tree = AB_tree_Map_init(9, 21, sizeof(int), sizeof(int [256]));
     srand(time(NULL));
     clock_t start, finish;
     double sum =0.0;
     int i = 0 ;
     int k,v;
-    for(i = 200000 ; i > 0 ; i--)
+    for(i = 10000000 ; i > 0 ; i--)
     {
         k = i;
         v = k*10;
-
+        
+        k = rand()%10000;
+        k = 10000*k + rand()%10000;
         v = k%10;
-
         start = clock();
-        ab_tree->Insert(ab_tree, &k, &v);
-        if(ab_tree->Search(ab_tree, &k) == 0)
-            printf("???\n"); 
-        ab_tree->GetValue(ab_tree, &v);
+        if(i%6)
+            ab_tree->Insert(ab_tree, &k, tmp);
+        else
+            ab_tree->Search(ab_tree, &k);
+        //if (i%6 && ab_tree->Search(ab_tree, &k) == 0)
+        //    printf("???\n"); 
+        //ab_tree->GetValue(ab_tree, &v);
         finish = clock();
 
         sum = sum+((finish - start) / (double)CLOCKS_PER_SEC);
+
+        if (i % 1000000 == 0)
+        {
+            _sleep(2000);
+            srand(time(NULL));
+        }
+            
 
     }
 
     printf("%lf\n",sum);
-    //return 0;
-
-    //tra(((AB_Tree_Map*)ab_tree)->TreeConfig);
+    //GetTotalKeytCount(((AB_Tree_Map*)ab_tree)->TreeConfig);
+    //tra(ab_tree->TreeConfig);
+    GetTotalNodeCount(((AB_Tree_Map*)ab_tree)->TreeConfig);
+    
     printf("\\\\\\\\\\\\\\\\\\\\\n");
 
-    for(i = 2000000 ; i > 0 ; i--)
+    for(i = 10000000 ; i > 0 ; i--)
     {
         k = i;
-
-        v = k-10;
+        v = k*10;
+        
+        k = rand()%10000;
+        k = 10000*k + rand()%10000;
+        v = k%10;
 
         start = clock();
-        ab_tree->Insert(ab_tree, &k, &v);
-        if(ab_tree->Search(ab_tree, &k) == 0)
-            printf("????DD?\n");
-        ab_tree->GetValue(ab_tree, &v);
-        if (v != k-10)
-            printf("????AA\n");
-        if (ab_tree->Delete(ab_tree, &k) == 0)
-            printf("fail delete\n");
+        ab_tree->Delete(ab_tree, &k);
+        //ab_tree->Search(ab_tree, &k);
+
+        //ab_tree->GetValue(ab_tree, &v);
         finish = clock();
-        //printf("%d %d\n",k, v);
+
         sum = sum+((finish - start) / (double)CLOCKS_PER_SEC);
+
+        if (i % 1000000 == 0)
+        {
+            _sleep(2000);
+            srand(time(NULL));
+        }
+    
 
     }
 
+    printf("%lf\n",sum);
     return 0;
+
 }
 
